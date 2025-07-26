@@ -1,0 +1,44 @@
+package com.tap;
+
+import java.io.*;
+import java.sql.*;
+
+public class OrderCSVLoader {
+public static void main(String[] args) {
+String jdbcURL = "jdbc:mysql://localhost:3306/ecommerce";
+String username = "root";
+String password = "Jacop@15";
+String csvFilePath = "csv_data/orders.csv";
+
+try (
+Connection conn = DriverManager.getConnection(jdbcURL, username, password);
+BufferedReader br = new BufferedReader(new FileReader(csvFilePath))
+) {
+conn.setAutoCommit(false);
+String sql = "INSERT INTO orders (order_id, product_id, quantity, status) VALUES (?, ?, ?, ?)";
+PreparedStatement stmt = conn.prepareStatement(sql);
+
+String line;
+br.readLine(); // skip header
+while ((line = br.readLine()) != null) {
+String[] data = line.split(",");
+
+stmt.setInt(1, Integer.parseInt(data[0]));
+stmt.setInt(2, Integer.parseInt(data[1]));
+stmt.setInt(3, Integer.parseInt(data[2]));
+stmt.setString(4, data[3]);
+
+stmt.addBatch();
+}
+
+stmt.executeBatch();
+conn.commit();
+stmt.close();
+
+System.out.println("Order data inserted successfully.");
+
+} catch (Exception e) {
+e.printStackTrace();
+}
+}
+}	
